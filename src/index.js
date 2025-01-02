@@ -19,7 +19,7 @@ app.use(bodyParser.json());
 //GET
 app.get('/pregunta', async (rec, res) =>{
     try{
-        const result = await pool.query('SELECT * from pregunta_frecuente');
+        const result = await pool.query('SELECT * from mostrar_preguntas_frecuentes()');
         res.status(200).json(result.rows);
     }catch (err) {
         console.error(err);
@@ -46,7 +46,7 @@ app.get('/pregunta/:id', async (req, res) => {
   app.post('/pregunta', async (req, res) => {
     const { pregunta, respuesta } = req.body;
     try {
-      const result = await pool.query('SELECT agregar_pregunta($1, $2)', [pregunta, respuesta]);
+      const result = await pool.query('SELECT agregar_pregunta_frecuente($1, $2)', [pregunta, respuesta]);
       res.status(201).json( {message: 'Pregunta frecuente creada exitosamente'} );
     } catch (err) {
       console.error(err);
@@ -59,7 +59,7 @@ app.get('/pregunta/:id', async (req, res) => {
     const { id } = req.params;
     const { pregunta, respuesta } = req.body;
     try {
-      await pool.query('SELECT modificar_pregunta($1, $2, $3)', [id, pregunta, respuesta]);
+      await pool.query('SELECT modificar_pregunta_frecuente($1, $2, $3)', [id, pregunta, respuesta]);
       res.status(200).json({ message: 'Pregunta frecuente actualizada exitosamente' });
     } catch (err) {
       console.error(err);
@@ -71,7 +71,7 @@ app.get('/pregunta/:id', async (req, res) => {
   app.delete('/pregunta/:id', async (req, res) => {
     const { id } = req.params;
     try {
-      await pool.query('SELECT eliminar_pregunta($1)', [id]);
+      await pool.query('SELECT eliminar_pregunta_frecuente($1)', [id]);
       res.status(200).json({ message: 'Pregunta frecuente eliminada exitosamente' });
     } catch (err) {
       console.error(err);
@@ -111,7 +111,7 @@ app.get('/evento/:id', async (req, res) => {
 app.post('/evento', async (req, res) => {
   const { pregunta, respuesta } = req.body;
   try {
-    const result = await pool.query('SELECT agregar_evento($1, $2, $3, $4, $5)', [pregunta, respuesta]);
+    const result = await pool.query('SELECT agregar_evento($1, $2, $3, $4, $5)', [nombre_evento, titulo, descripcion, fecha, imagen]);
     res.status(201).json( {message: 'Evento creado exitosamente'} );
   } catch (err) {
     console.error(err);
@@ -124,7 +124,7 @@ app.put('/evento/:id', async (req, res) => {
   const { id } = req.params;
   const { pregunta, respuesta } = req.body;
   try {
-    await pool.query('SELECT modificar_evento($1, $2, $3, $4, $5, $6)', [id, pregunta, respuesta]);
+    await pool.query('SELECT modificar_evento($1, $2, $3, $4, $5, $6)', [id, nombre_evento, titulo, descripcion, fecha, imagen]);
     res.status(200).json({ message: 'Evento actualizado exitosamente' });
   } catch (err) {
     console.error(err);
@@ -175,7 +175,7 @@ app.get('/usuario/:id', async (req, res) => {
 app.post('/usuario', async (req, res) => {
   const { pregunta, respuesta } = req.body;
   try {
-    const result = await pool.query('SELECT añadir_usuario($1, $2, $3, $4)', [pregunta, respuesta]);
+    const result = await pool.query('SELECT agregar_usuario($1, $2, $3, $4, 5$)', [nombre, contraseña, telefono, is_asignado, id_rol_usuario]);
     res.status(201).json( {message: 'Usuario creado exitosamente'} );
   } catch (err) {
     console.error(err);
@@ -188,7 +188,7 @@ app.put('/usuario/:id', async (req, res) => {
   const { id } = req.params;
   const { pregunta, respuesta } = req.body;
   try {
-    await pool.query('SELECT modificar_asignado($1, $2)', [id, pregunta, respuesta]);
+    await pool.query('SELECT modificar_is_asignado($1, $2)', [id, is_asignado]);
     res.status(200).json({ message: 'Usuario actualizado exitosamente' });
   } catch (err) {
     console.error(err);
@@ -240,7 +240,7 @@ app.get('/buzon/:id', async (req, res) => {
 app.post('/buzon', async (req, res) => {
   const { pregunta, respuesta } = req.body;
   try {
-    const result = await pool.query('SELECT agregar_pregunta_buzon($1, $2)', [pregunta, respuesta]);
+    const result = await pool.query('SELECT agregar_pregunta_buzon($1, $2)', [pregunta, correo]);
     res.status(201).json( {message: 'Pregunta creada exitosamente'} );
   } catch (err) {
     console.error(err);
@@ -257,6 +257,46 @@ app.delete('/buzon/:id', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Error eliminando la pregunta' });
+  }
+});
+
+//Rutas para show
+//GET
+app.get('/show', async (rec, res) =>{
+  try{
+      const result = await pool.query('SELECT * from mostrar_shows()');
+      res.status(200).json(result.rows);
+  }catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error obteniendo los shows' })
+  }
+});
+
+//GET BY ID
+app.get('/show/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('SELECT * FROM show WHERE id = $1', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Show no encontrado' });
+    }
+    res.status(200).json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error obteniendo el show' });
+  }
+});
+
+//UPDATE
+app.put('/show/:id', async (req, res) => {
+  const { id } = req.params;
+  const { pregunta, respuesta } = req.body;
+  try {
+    await pool.query('SELECT modificar_show($1, $2, $3, $4, $5, $6, $7)', [id, is_disponible, horario, costo, intereaccion_niños, interaccion_adultos, ubicacion]);
+    res.status(200).json({ message: 'Show actualizado exitosamente' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error actualizando el show' });
   }
 });
   
