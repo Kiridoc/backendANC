@@ -1,8 +1,8 @@
 const express = require('express');
 const morgan = require('morgan');
-const bodyPatse = require('body-parser')
 const pool = require('./database');
 const bodyParser = require('body-parser');
+const cors = require("cors");
 
 //Configuración inicial
 const app = express();
@@ -12,8 +12,12 @@ app.listen( app.get("port"), () =>{
 });
 
 //Middlewares
+app.use(cors({
+  origin: ["http://localhost:5173"]
+}));
 app.use(morgan('dev'));
 app.use(bodyParser.json());
+
 
 //Rutas para preguntas frecuentes
 //GET
@@ -71,13 +75,16 @@ app.get('/pregunta/:id', async (req, res) => {
   app.delete('/pregunta/:id', async (req, res) => {
     const { id } = req.params;
     try {
-      await pool.query('SELECT eliminar_pregunta_frecuente($1)', [id]);
+      await pool.query('SELECT eliminar_pregunta_frecuente($1)', [id]); // Asegurar que el ID es un entero
       res.status(200).json({ message: 'Pregunta frecuente eliminada exitosamente' });
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: 'Error eliminando la pregunta frecuente' });
     }
   });
+  
+  
+
   
 
 //Rutas para eventos
